@@ -73,6 +73,7 @@ Contents
    :caption: Examples:
 
    Examples/Continuous_models
+   Examples/Stochastic_CTMC_models
    Examples/Discrete_models
    Examples/API_features
    Examples/Phase_space_analysis
@@ -110,6 +111,9 @@ ODE Solvers (Unified interface)
   - :class:`~epimodels.solvers.ScipySolver` - Scipy-based solver (CPU)
   - :class:`~epimodels.solvers.DiffraxSolver` - JAX-accelerated solver (GPU)
 
+CTMC Solvers (Stochastic simulation)
+  - :class:`~epimodels.stochastic.CTMC.solvers.GillespieSolver` - Gillespie Direct Method (SSA)
+
 Model Classes
 -------------
 
@@ -141,6 +145,12 @@ Discrete Models (Difference equations)
   - :class:`~epimodels.discrete.models.SIpR` - Secondary infections from recovered
   - :class:`~epimodels.discrete.models.SEIpR` - Exposed + secondary infections from R
 
+Stochastic Models (CTMC / Gillespie SSA)
+  - :class:`~epimodels.stochastic.CTMC.models.SIR` - Stochastic SIR
+  - :class:`~epimodels.stochastic.CTMC.models.SIS` - Stochastic SIS
+  - :class:`~epimodels.stochastic.CTMC.models.SIRS` - Stochastic SIRS (waning immunity)
+  - :class:`~epimodels.stochastic.CTMC.models.SEIR` - Stochastic SEIR (with latent period)
+
 Fitting Module
 --------------
   - :class:`~epimodels.fitting.ModelFitter` - Full-featured parameter fitter
@@ -167,6 +177,19 @@ Method                               Description
 ``reset()``                           Clear simulation results
 ``R0``                                Basic reproduction number (property)
 ``diagram``                           Mermaid compartment diagram (property)
+====================================  =====================================================
+
+Stochastic models (CTMC) also provide:
+
+====================================  =====================================================
+Method                               Description
+====================================  =====================================================
+``get_mean()``                        Mean trajectory across replicates
+``get_variance()``                    Variance across replicates
+``get_quantiles(q)``                  Quantile trajectories
+``get_replicate(i)``                  Single replicate as dict
+``get_event_times(event)``            Event occurrence times
+``to_dataframe(replicate=i)``        DataFrame of specific replicate
 ====================================  =====================================================
 
 
