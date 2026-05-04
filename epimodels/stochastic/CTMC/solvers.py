@@ -183,9 +183,79 @@ class GillespieSolver(CTMCSolverBase):
             steps=len(event_indices_list),
         )
 
+class TauLeapingSolver(CTMCSolverBase):
+    """
+    Tau-leaping solver for CTMC models.
+
+    Approximates the CTMC by leaping over fixed time steps tau,
+    sampling the number of occurrences of each event via Poisson
+    distributions.
+
+    Parameters:
+        tau: Time step size
+    """
+
+    def __init__(self, tau: float = 0.05):
+        if tau <= 0:
+            raise ValueError("tau must be positive")
+        self.tau = tau
+
+    def solve(
+        self,
+        propensity_fn: Callable[[dict, NDArray], NDArray],
+        transition_matrix: NDArray[np.int64],
+        initial_state: NDArray[np.int64],
+        t_span: tuple[float, float],
+        params: dict,
+        rng: np.random.Generator,
+        **kwargs,
+    ) -> CTMCTrajectory:
+        t0, tf = t_span
+        state = np.array(initial_state, dtype=np.int64)
+        tmat = np.asarray(transition_matrix, dtype=np.int64)
+        n_events = tmat.shape[1]
+
+        times_list = [t0]
+        states_list = [state.copy()]
+        event_indices_list = []
+
+        tc = float(t0)
+
+        while tc < tf:
+            a = propensity_fn(params, state)
+            a = np.asarray(a, dtype=float)
+
+            if np.all(a <= 0):
+                break
+
+            tau = min(self.tau, tf - tc)
+            K = rng.poisson(a * tau)
+
+            state = state + tmat @ K
+            state = np.maximum(state, 0)
+
+            tc += tau
+
+            times_list.append(tc)
+            states_list.append(state.copy())
+            
+            event_indices_list.append(-1)
+
+        if len(times_list) == 1:
+            times_list.append(tf)
+            states_list.append(state.copy())
+
+        return CTMCTrajectory(
+            times=np.array(times_list),
+            states=np.array(states_list),
+            event_indices=np.array(event_indices_list, dtype=np.intp),
+            steps=len(event_indices_list),
+        )
+
 
 __all__ = [
     "CTMCTrajectory",
     "CTMCSolverBase",
     "GillespieSolver",
+    "TauLeapingSolver"
 ]
